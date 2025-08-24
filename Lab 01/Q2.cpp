@@ -7,7 +7,7 @@ class Exam
 private:
     string *sName;
     string *examDate;
-    string *subject;
+    string *subject; //added myself so that it looks better when displaying Exam Details
     int *score;
 
 public:
