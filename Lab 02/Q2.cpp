@@ -24,6 +24,12 @@ cout <<"Enter elements (0 for empty, 1 for occupied): "<< endl;
 for (int i=0 ;i< rows ;i++) {
     for (int j=0 ;j < cols ;j++){
         cin >> ptr[i][j];
+        if (ptr[i][j] != 0) {
+            if (ptr[i][j]!=1){
+                cout<<"Invalid Input. Please enter either a 0 or a 1 to mark seat status!"<<endl;
+                return 0;
+            }
+        }
     }
 }
 cout <<endl;
