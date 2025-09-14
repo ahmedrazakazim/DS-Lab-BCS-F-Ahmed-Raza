@@ -4,7 +4,7 @@ using namespace std;
 class Node {
 public:
     int data;
-    Node* next;
+     Node* next;
     Node(int val) : data(val), next(NULL) {}
 };
 
@@ -27,7 +27,8 @@ int main() {
         tail->next = new Node(i);
         tail = tail->next;
     }
-    tail->next = head; // Make it circular
+    
+    tail->next = head; 
 
     Node* prev = tail;
     Node* curr = head;
@@ -48,7 +49,6 @@ int main() {
     cout   << "Position of survivor: " << curr->data << endl;
 
     delete curr;
-
 
 
 
