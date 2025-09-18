@@ -23,7 +23,7 @@ void selectionSort(int arr[], int n)
    }
 }
 
-void showArray(int arr[], int n)
+void display(int arr[], int n)
 {
    for (int i=0;i<n;i++)
         cout << arr[i] <<" "; 
@@ -45,12 +45,12 @@ int main()
     }
 
     cout<<"Array before sorting: ";
- showArray(arr,n);
+ display(arr,n);
 
         selectionSort(arr,n);
 
     cout<<"Array after sorting: ";
-    showArray(arr,n);
+    display(arr,n);
 
    delete[] arr;
  return 0;
