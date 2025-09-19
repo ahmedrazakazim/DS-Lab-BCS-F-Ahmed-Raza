@@ -15,7 +15,6 @@ int main() {
 int n;
   cout << "Enter a number: \n";
 cin >> n;
-  calculateFactorial(n);
-
+	cout<<"Factorial of "<< n << " is "<<calculateFactorial(n)<<endl;
   return 0;
 }
