@@ -42,10 +42,16 @@ int main(){
        cout<<"Process "<<p.id<<" priority "<<p.priority<<endl;
      if(p.priority>1) s.push(p);
    }
+  
 
   cout<<"\nExecuting from Stack:\n";
-    while(!s.empty()){
+    while(!s.empty()) 
+    {
        Process p=s.pop();
          cout<<"Executing Process "<<p.id<<" with Priority "<<p.priority<<endl;
+    
+    
     }
+
+return 0;
 }
