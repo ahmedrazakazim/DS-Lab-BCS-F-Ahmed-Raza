@@ -44,8 +44,6 @@ void printArray(const int arr[], int n) {
 int main() {
     const int N = 10;
     int minHeapArray[N] = {3, 5, 9, 6, 8, 20, 10, 12, 18, 9};
-
-    cout << "Task 4: Convert Min Heap to Max Heap" << endl;
     cout << "Input (Min Heap Array): ";
     printArray(minHeapArray, N);
 
