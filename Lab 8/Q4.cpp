@@ -16,6 +16,7 @@ public:
 };
 
 
+
 TreeNode* insertNode(TreeNode* root, int key) {
     if (root == NULL) {
         return new TreeNode(key);
