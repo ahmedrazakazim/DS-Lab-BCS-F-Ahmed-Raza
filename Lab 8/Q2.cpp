@@ -1,131 +1,217 @@
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <string>
 #include <algorithm>
 
 using namespace std;
 
-class TreeNode
-{
-public:
-    int value, height;
-    TreeNode *left;
-    TreeNode *right;
+// --- Combatant Data Structure (Replacing string and BST Node) ---
+struct Combatant {
+    string name;
+    int keyID;
+    int health;
+    int attack;
+    Combatant(string n, int id, int hp, int atk) : name(n), keyID(id), health(hp), attack(atk) {}
+};
 
-    TreeNode(int k)
-    {
-        value = k;
-        height = 1;
-        left = right = NULL;
+class BattleNode {
+public:
+    Combatant data;
+    BattleNode* left;
+    BattleNode* right;
+
+    BattleNode(string n, int id, int hp, int atk) : data(n, id, hp, atk) {
+        left = NULL;
+        right = NULL;
+    }
+    
+    // Destructor for cleanup
+    ~BattleNode() {
+        delete left;
+        delete right;
     }
 };
 
-int getNodeHeight(TreeNode *n)
-{
-    return n ? n->height : 0;
-}
+// --- Reused BST Methods ---
 
-int calculateBalanceFactor(TreeNode *n)
-{
-    return n ? getNodeHeight(n->left) - getNodeHeight(n->right) : 0;
-}
-
-TreeNode *updateHeight(TreeNode *n)
-{
-    n->height = 1 + max(getNodeHeight(n->left), getNodeHeight(n->right));
-    return n;
-}
-
-TreeNode *rightRotate(TreeNode *y)
-{
-    TreeNode *x = y->left;
-    TreeNode *t2 = x->right;
-
-    x->right = y;
-    y->left = t2;
-
-    updateHeight(y);
-    updateHeight(x);
-
-    return x;
-}
-
-TreeNode *leftRotate(TreeNode *x)
-{
-    TreeNode *y = x->right;
-    TreeNode *t2 = y->left;
-
-    y->left = x;
-    x->right = t2;
-
-    updateHeight(x);
-    updateHeight(y);
-
-    return y;
-}
-
-TreeNode *insertIntoAVL(TreeNode *root, int value)
-{
-    if (!root)
-        return new TreeNode(value);
-
-    if (value < root->value)
-        root->left = insertIntoAVL(root->left, value);
-    else if (value > root->value)
-        root->right = insertIntoAVL(root->right, value);
-    else
-        return root;
-
-    updateHeight(root);
-
-    int balance = calculateBalanceFactor(root);
-
-    // Left Left Case
-    if (balance > 1 && value < root->left->value)
-        return rightRotate(root);
-
-    // Right Right Case
-    if (balance < -1 && value > root->right->value)
-        return leftRotate(root);
-
-    // Left Right Case
-    if (balance > 1 && value > root->left->value)
-    {
-        root->left = leftRotate(root->left);
-        return rightRotate(root);
+BattleNode* insertNode(BattleNode* root, Combatant c) {
+    if (root == NULL) {
+        return new BattleNode(c.name, c.keyID, c.health, c.attack);
     }
-
-    // Right Left Case
-    if (balance < -1 && value < root->right->value)
-    {
-        root->right = rightRotate(root->right);
-        return leftRotate(root);
+    if (c.keyID < root->data.keyID) {
+        root->left = insertNode(root->left, c);
+    } else if (c.keyID > root->data.keyID) {
+        root->right = insertNode(root->right, c);
     }
-
     return root;
 }
 
-void inorderTraversal(TreeNode *root)
-{
-    if (!root)
-        return;
-    inorderTraversal(root->left);
-    cout << root->value << " ";
-    inorderTraversal(root->right);
+BattleNode* findMinNode(BattleNode* node) {
+    BattleNode* current = node;
+    while (current && current->left != NULL) {
+        current = current->left;
+    }
+    return current;
 }
 
-int main()
-{
-    TreeNode *avlRoot = NULL;
+BattleNode* deleteNode(BattleNode* root, int keyID) {
+    if (root == NULL) {
+        return root;
+    }
 
-    int data[] = {50, 30, 70, 20, 40, 60, 80};
-    for (int i = 0; i < 7; i++)
-        avlRoot = insertIntoAVL(avlRoot, data[i]);
-    
+    if (keyID < root->data.keyID) {
+        root->left = deleteNode(root->left, keyID);
+    } else if (keyID > root->data.keyID) {
+        root->right = deleteNode(root->right, keyID);
+    } else {
+        if (root->left == NULL) {
+            BattleNode* temp = root->right;
+            root->right = NULL;
+            delete root;
+            return temp;
+        } else if (root->right == NULL) {
+            BattleNode* temp = root->left;
+            root->left = NULL;
+            delete root;
+            return temp;
+        }
 
-    avlRoot = insertIntoAVL(avlRoot, 55); 
+        BattleNode* temp = findMinNode(root->right);
+
+        root->data.name = temp->data.name;
+        root->data.keyID = temp->data.keyID;
+        root->data.health = temp->data.health;
+        root->data.attack = temp->data.attack;
+
+        root->right = deleteNode(root->right, temp->data.keyID);
+    }
+    return root;
+}
+
+// --- Game Specific Methods ---
+
+void displayTeam(BattleNode* root) {
+    if (root != NULL) {
+        displayTeam(root->left);
+        cout << "(" << root->data.name << " HP:" << root->data.health << ") ";
+        displayTeam(root->right);
+    }
+}
+
+BattleNode* getFrontline(BattleNode* root) {
+    return findMinNode(root);
+}
+
+int calculateDamage(int baseAttack) {
+    return baseAttack + (rand() % 5);
+}
+
+void battleLoop(BattleNode*& playerTree, BattleNode*& enemyTree) {
+    int round = 1;
+
+    while (playerTree != NULL && enemyTree != NULL) {
+        cout << "\n---------------------------------------------------" << endl;
+        cout << "ROUND: " << round << endl;
+        
+        cout << "HERO TEAM: ";
+        displayTeam(playerTree);
+        cout << endl;
+        
+        cout << "ENEMY TEAM: ";
+        displayTeam(enemyTree);
+        cout << endl;
+
+        // Player's Turn
+        BattleNode* playerAttacker = getFrontline(playerTree);
+        BattleNode* enemyDefender = getFrontline(enemyTree);
+
+        cout << "\nPlayer Turn: " << playerAttacker->data.name << " attacks " << enemyDefender->data.name << endl;
+        
+        int damage = calculateDamage(playerAttacker->data.attack);
+        int oldHP = enemyDefender->data.health;
+        enemyDefender->data.health -= damage;
+        
+        cout << "Damage dealt: " << damage << endl;
+        cout << enemyDefender->data.name << " HP: " << oldHP << " -> " << enemyDefender->data.health << endl;
+
+        if (enemyDefender->data.health <= 0) {
+            int defeatedID = enemyDefender->data.keyID;
+            string defeatedName = enemyDefender->data.name;
+            
+            enemyTree = deleteNode(enemyTree, defeatedID);
+            
+            cout << "\n*** ELIMINATION: " << defeatedName << " was defeated! ***" << endl;
+            if (enemyTree == NULL) break;
+            cout << getFrontline(enemyTree)->data.name << " is the new enemy frontline!" << endl;
+        }
+        
+        // Enemy's Turn (only if both teams are still standing)
+        if (playerTree != NULL && enemyTree != NULL) {
+            playerAttacker = getFrontline(playerTree); // May have changed if player was just eliminated, but here it's still the player's team
+            enemyDefender = getFrontline(enemyTree); // May have changed if enemy was just eliminated
+            
+            BattleNode* enemyAttacker = enemyDefender;
+            BattleNode* playerDefender = playerAttacker;
+
+            cout << "\nEnemy Turn: " << enemyAttacker->data.name << " attacks " << playerDefender->data.name << endl;
+            
+            damage = calculateDamage(enemyAttacker->data.attack);
+            oldHP = playerDefender->data.health;
+            playerDefender->data.health -= damage;
+            
+            cout << "Damage dealt: " << damage << endl;
+            cout << playerDefender->data.name << " HP: " << oldHP << " -> " << playerDefender->data.health << endl;
+
+            if (playerDefender->data.health <= 0) {
+                int defeatedID = playerDefender->data.keyID;
+                string defeatedName = playerDefender->data.name;
+                
+                playerTree = deleteNode(playerTree, defeatedID);
+                
+                cout << "\n*** ELIMINATION: " << defeatedName << " was defeated! ***" << endl;
+                if (playerTree == NULL) break;
+                cout << getFrontline(playerTree)->data.name << " is the new hero frontline!" << endl;
+            }
+        }
+        
+        round++;
+    }
+
+    cout << "\n===================================================" << endl;
+    if (playerTree == NULL) {
+        cout << "VICTORY: The Enemy Team wins the BattleQuest!" << endl;
+    } else {
+        cout << "VICTORY: The Hero Team wins the BattleQuest!" << endl;
+    }
+    cout << "===================================================" << endl;
     
-    cout << "AVL Tree after insertions (Inorder): ";
-    inorderTraversal(avlRoot);
-    cout << endl;
+    // Cleanup to prevent memory leak
+    delete playerTree;
+    delete enemyTree;
+}
+
+int main() {
+    srand(time(0));
+    
+    BattleNode* playerTeam = NULL;
+    BattleNode* enemyTeam = NULL;
+
+    // Player Initialization (Name, ID, HP, ATK)
+    playerTeam = insertNode(playerTeam, Combatant("Kael", 101, 100, 15));
+    playerTeam = insertNode(playerTeam, Combatant("Lira", 105, 90, 20));
+    playerTeam = insertNode(playerTeam, Combatant("Grom", 103, 120, 12));
+    playerTeam = insertNode(playerTeam, Combatant("Sena", 104, 80, 25));
+    playerTeam = insertNode(playerTeam, Combatant("Rix", 102, 110, 18));
+
+    // Enemy Initialization (Name, ID, HP, ATK)
+    enemyTeam = insertNode(enemyTeam, Combatant("Goblin", 201, 80, 10));
+    enemyTeam = insertNode(enemyTeam, Combatant("Orc", 205, 110, 15));
+    enemyTeam = insertNode(enemyTeam, Combatant("Troll", 203, 150, 8));
+    enemyTeam = insertNode(enemyTeam, Combatant("Witch", 204, 70, 22));
+    enemyTeam = insertNode(enemyTeam, Combatant("Vamp", 202, 95, 17));
+
+    battleLoop(playerTeam, enemyTeam);
 
     return 0;
 }
