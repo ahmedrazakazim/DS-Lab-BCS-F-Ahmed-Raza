@@ -30,7 +30,6 @@ void buildPrefixTable(const string& searchTarget, int prefixArray[])
         }
     }
 }
-
 int main()
 {
     string document = "ababababc";
