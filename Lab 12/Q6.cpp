@@ -17,7 +17,6 @@ void findShortestPath(int adjMatrix[][NUM_NODES], int sourceNode, int destinatio
         distance[i] = INFINITY_DIST;
         predecessor[i] = -1;
     }
-
     distance[sourceNode] = 0;
 
     for (int count = 0; count < NUM_NODES; count++) {
