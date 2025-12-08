@@ -1,130 +1,155 @@
 #include <iostream>
+#include <string>
+
 using namespace std;
 
-#define TABLE_SIZE 100
+#define BUCKET_COUNT 100
 
-class Node{
+class DataEntry{
     public:
-    string value;
-    string key;
-    Node* next;
-    Node(string k , string v){
-        next = NULL;
-        key = k;
-        value = v;
+    string recordValue;
+    string recordKey;
+    DataEntry* nextLink;
+    
+    DataEntry(string k , string v){
+        nextLink = nullptr;
+        recordKey = k;
+        recordValue = v;
     }
 };
 
-class HashTable{
-    Node* Table[TABLE_SIZE];
+class ChainedDictionary{
+    DataEntry* bucketArray[BUCKET_COUNT];
+    
     public:
-    HashTable(){
-        for(int i = 0 ; i < TABLE_SIZE ; i++){
-            Table[i] = nullptr;
+    ChainedDictionary(){
+        for(int i = 0 ; i < BUCKET_COUNT ; i++){
+            bucketArray[i] = nullptr;
         }
     }
 
-    int hashfunction(string key){
-        int sum = 0;
+    int computeIndex(string key){
+        int hashSum = 0;
         for(int i = 0 ; i < key.size() ; i++){
-            sum += key[i];
+            hashSum += key[i];
         }
-        return sum % TABLE_SIZE;
+        return hashSum % BUCKET_COUNT;
     }
 
-    void add_record(string key , string value){
-        int index = hashfunction(key);
-        Node* temp = Table[index];
-        while(temp != NULL){
-            if(temp->key == key){
-                temp->value = value;
+    void insertRecord(string key , string value){
+        int index = computeIndex(key);
+        DataEntry* current = bucketArray[index];
+        
+        while(current != nullptr){
+            if(current->recordKey == key){
+                current->recordValue = value;
                 return;
             }
-            temp = temp->next;
+            current = current->nextLink;
         }
 
-        Node* newnode = new Node(key , value);
-        newnode->next = Table[index];
-        Table[index] = newnode;
+        DataEntry* newEntry = new DataEntry(key , value);
+        newEntry->nextLink = bucketArray[index];
+        bucketArray[index] = newEntry;
     }
 
-    void search(string key){
-        int index = hashfunction(key);
-        Node* temp = Table[index];
-        while(temp != NULL){
-            if(temp->key == key){
-                cout << "search for " << key << ": " << temp->value << endl;
+    void retrieve(string key){
+        int index = computeIndex(key);
+        DataEntry* current = bucketArray[index];
+        
+        while(current != nullptr){
+            if(current->recordKey == key){
+                cout << "search for " << key << ": " << current->recordValue << endl;
                 return;
             }
-            temp = temp->next;
+            current = current->nextLink;
         }
         cout << "Search word not found. " << endl;
     }
 
-    void remove(string key){
-        int index = hashfunction(key);
-        Node* temp = Table[index];
-        Node* prev = nullptr;
+    void erase(string key){
+        int index = computeIndex(key);
+        DataEntry* current = bucketArray[index];
+        DataEntry* previous = nullptr;
 
-        if(temp == NULL){
+        if(current == nullptr){
             cout << "key not found for deletion." << endl;
             return ;
         }
 
-        while(temp != NULL & temp->key != key){
-            prev = temp;
-            temp = temp->next;
+        while(current != nullptr && current->recordKey != key){
+            previous = current;
+            current = current->nextLink;
         }
-        if(temp->key == key){
-            Table[index] = temp->next;
+        
+        if(current == nullptr){
+            cout << "key not found for deletion." << endl;
+            return;
+        }
+
+        if(previous == nullptr){
+            bucketArray[index] = current->nextLink;
         }
         else{
-            prev->next = temp->next;
+            previous->nextLink = current->nextLink;
         }
+        
         cout << "key " << key << " deleted successfully." << endl;
-        delete temp;
-
+        delete current;
     }
 
-    void traverse(){
-        for(int i  = 0 ; i < TABLE_SIZE ; i++){
-            Node* temp = Table[i];
-            if(temp == NULL){
+    void displayAll(){
+        for(int i = 0 ; i < BUCKET_COUNT ; i++){
+            DataEntry* current = bucketArray[i];
+            if(current == nullptr){
                 continue;
             }
             cout << "[" << i  << "]" ;
-            while(temp != NULL){
-                cout << "(" << temp->key << "," << temp->value << ")";
-                Node* curr = temp->next;
-                while(curr != NULL){
-                    cout  << "->";
-                    cout << "(" << temp->key << "," << temp->value << ")" ;
-                    curr = curr->next;
-                } 
-                cout << endl;
-                temp = NULL;
+            
+            while(current != nullptr){
+                cout << "(" << current->recordKey << "," << current->recordValue << ")";
+                if (current->nextLink != nullptr) {
+                    cout << "->";
+                }
+                current = current->nextLink;
+            }
+            cout << endl;
+        }
+    }
+    
+    ~ChainedDictionary() {
+        for (int i = 0; i < BUCKET_COUNT; ++i) {
+            DataEntry* current = bucketArray[i];
+            while (current != nullptr) {
+                DataEntry* next = current->nextLink;
+                delete current;
+                current = next;
             }
         }
     }
-
 };
 
 int main(){
-    HashTable table;
-    table.add_record("AB" ,"FASTNU");
-    table.add_record("CD" , "CS");
-    table.add_record("ABC" , "UNI");
-    table.add_record("ABd" , "KHI");
-    table.add_record("b" , "aplha");
-    table.traverse();
+    ChainedDictionary dictionary;
+    dictionary.insertRecord("AB" ,"FASTNU");
+    dictionary.insertRecord("CD" , "CS");
+    dictionary.insertRecord("ABC" , "UNI");
+    dictionary.insertRecord("ABd" , "KHI");
+    dictionary.insertRecord("b" , "aplha");
+    
+    cout << "--- Initial Table ---" << endl;
+    dictionary.displayAll();
+    
     cout << endl;
     cout << "Searching for key " << endl;
-    table.search("ABd");
+    dictionary.retrieve("ABd");
+    
     cout << endl;
-    table.remove("b");
+    dictionary.erase("b");
+    
     cout << endl;
-    table.traverse();
+    cout << "--- Table After Deletion ---" << endl;
+    dictionary.displayAll();
+    
     return 0;
-
-
 }
