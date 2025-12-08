@@ -1,149 +1,99 @@
 #include <iostream>
-#include <algorithm>
 
 using namespace std;
 
-class AVL_Node
-{
+class TreeNode {
 public:
-    int data, level;
-    AVL_Node *left;
-    AVL_Node *right;
+    int data;
+    TreeNode* left;
+    TreeNode* right;
 
-    AVL_Node(int d)
-    {
-        data = d;
-        level = 1;
-        left = right = NULL;
+    TreeNode(int val) {
+        data = val;
+        left = NULL;
+        right = NULL;
     }
 };
 
-int getNodeLevel(AVL_Node *n) { return n ? n->level : 0; }
 
-AVL_Node *updateLevel(AVL_Node *n)
-{
-    n->level = 1 + max(getNodeLevel(n->left), getNodeLevel(n->right));
-    return n;
-}
-
-AVL_Node *rightRotate(AVL_Node *y)
-{
-    AVL_Node *x = y->left;
-    AVL_Node *t2 = x->right;
-
-    x->right = y;
-    y->left = t2;
-
-    updateLevel(y);
-    updateLevel(x);
-
-    return x;
-}
-
-AVL_Node *leftRotate(AVL_Node *x)
-{
-    AVL_Node *y = x->right;
-    AVL_Node *t2 = y->left;
-
-    y->left = x;
-    x->right = t2;
-
-    updateLevel(x);
-    updateLevel(y);
-
-    return y;
-}
-
-int getBalanceFactor(AVL_Node *n) { return getNodeLevel(n->left) - getNodeLevel(n->right); }
-
-AVL_Node *insertNode(AVL_Node *r, int data)
-{
-    if (!r)
-        return new AVL_Node(data);
-
-    if (data < r->data)
-        r->left = insertNode(r->left, data);
-    else if (data > r->data)
-        r->right = insertNode(r->right, data);
-    else
-        return r;
-
-    updateLevel(r);
-
-    int balance = getBalanceFactor(r);
-
-    if (balance > 1 && data < r->left->data)
-        return rightRotate(r);
-    if (balance < -1 && data > r->right->data)
-        return leftRotate(r);
-
-    if (balance > 1 && data > r->left->data)
-    {
-        r->left = leftRotate(r->left);
-        return rightRotate(r);
+TreeNode* insertNode(TreeNode* root, int key) {
+    if (root == NULL) {
+        return new TreeNode(key);
     }
-
-    if (balance < -1 && data < r->right->data)
-    {
-        r->right = rightRotate(r->right);
-        return leftRotate(r);
+    if (key < root->data) {
+        root->left = insertNode(root->left, key);
+    } else if (key > root->data) {
+        root->right = insertNode(root->right, key);
     }
-
-    return r;
+    return root;
 }
 
-AVL_Node *findKthSmallest(AVL_Node *root, int &k)
-{
-    if (!root)
-        return NULL;
 
-    AVL_Node *leftResult = findKthSmallest(root->left, k);
-    if (leftResult)
-        return leftResult;
-
-    k--;
-    if (k == 0)
-        return root;
-
-    return findKthSmallest(root->right, k);
-}
-
-AVL_Node *findKthLargest(AVL_Node *root, int &k)
-{
-    if (!root)
-        return NULL;
-
-    AVL_Node *rightResult = findKthLargest(root->right, k);
-    if (rightResult)
-        return rightResult;
-
-    k--;
-    if (k == 0)
-        return root;
-
-    return findKthLargest(root->left, k);
-}
-
-int main()
-{
-    AVL_Node *root = NULL;
-    int array[] = {40, 20, 60, 10, 30, 50, 70};
-    for (int i = 0; i < 7; i++)
-        root = insertNode(root, array[i]);
-
-    int k1 = 3, k2 = 2;
-
-    AVL_Node *smallest = findKthSmallest(root, k1);
+TreeNode* searchAndInsert(TreeNode* root, int key, bool& wasInserted) {
+    if (root == NULL) {
+        wasInserted = true;
+        return new TreeNode(key);
+    }
     
+    if (key < root->data) {
+        root->left = searchAndInsert(root->left, key, wasInserted);
+    } else if (key > root->data) {
+        root->right = searchAndInsert(root->right, key, wasInserted);
+    } else {
+        wasInserted = false;
+    }
+    
+    return root;
+}
 
-    int k_temp = k2; 
-    AVL_Node *largest = findKthLargest(root, k_temp);
+void inorderTraversal(TreeNode* root) {
+    if (root != NULL) {
+        inorderTraversal(root->left);
+        cout << root->data << " ";
+        inorderTraversal(root->right);
+    }
+}
 
-    cout << "3rd Smallest: " << smallest->data << endl;
-    cout << "2nd Largest: " << largest->data << endl;
+int main() {
+    TreeNode* root = NULL;
 
-    cout << "Left Height from Root: " << getNodeLevel(root->left) << endl;
-    cout << "Right Height from Root: " << getNodeLevel(root->right) << endl;
+    root = insertNode(root, 50);
+    insertNode(root, 30);
+    insertNode(root, 70);
+    insertNode(root, 20);
+    insertNode(root, 40);
+
+    cout << "Initial Tree (Inorder): ";
+    inorderTraversal(root);
+    cout << endl;
+
+    int searchVal1 = 40;
+    bool inserted1 = false;
+    root = searchAndInsert(root, searchVal1, inserted1);
+    
+    cout << "--- Search 1: Value " << searchVal1 << " ---" << endl;
+    if (inserted1) {
+        cout << "Value " << searchVal1 << " did not exist. Inserted." << endl;
+        cout << "New Tree: ";
+        inorderTraversal(root);
+        cout << endl;
+    } else {
+        cout << "Value " << searchVal1 << " already exists. Tree unchanged." << endl;
+    }
+
+    int searchVal2 = 65;
+    bool inserted2 = false;
+    root = searchAndInsert(root, searchVal2, inserted2);
+    
+    cout << "--- Search 2: Value " << searchVal2 << " ---" << endl;
+    if (inserted2) {
+        cout << "Value " << searchVal2 << " did not exist. Inserted." << endl;
+        cout << "New Tree: ";
+        inorderTraversal(root);
+        cout << endl;
+    } else {
+        cout << "Value " << searchVal2 << " already exists. Tree unchanged." << endl;
+    }
 
     return 0;
 }
